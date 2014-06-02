@@ -1,0 +1,44 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: update & upgrade
+      shell: apt-get update && apt-get -y upgrade
+    - name: set timezone
+      shell: echo "Etc/UTC" > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
+    - name: install packages
+      apt: name={{ item }} state=present
+      with_items:
+        - apache2
+        - mysql-server
+        - php5-cli
+        - php5-gd
+        - php5-mcrypt
+        - php5-mysql
+        - php5-curl
+        - libapache2-mod-php5
+        - libapache2-mod-suphp
+        - unzip
+        - emacs24
+    - name: enable php5-mcrypt
+      shell: php5enmod mcrypt
+    - name: enable mod rewrite
+      shell: a2enmod rewrite
+    - name: enable public_html
+      shell: a2enmod userdir
+    - name: comment out lines in php5.conf to enable php in userdir
+      template: src=php5.conf dest=/etc/apache2/mods-enabled/php5.conf
+    - name: set vhost check in suphp to false so userdir works properly
+      template: src=suphp.conf dest=/etc/suphp/suphp.conf
+    - name: restart apache
+      shell: service apache2 restart
+    - name: download composer
+      shell: curl -sS https://getcomposer.org/installer | php
+    - name: install composer
+      command: mv composer.phar /usr/local/bin/composer
+    - name: download boris
+      command: curl -L -O https://github.com/d11wtq/boris/releases/download/v1.0.8/boris.phar
+    - name: make boris executable
+      command: chmod +x boris.phar
+    - name: install boris
+      command: mv boris.phar /usr/local/bin/boris
