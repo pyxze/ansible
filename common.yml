@@ -6,6 +6,8 @@
       shell: apt-get update && apt-get -y upgrade
     - name: set timezone
       shell: echo "Etc/UTC" > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
+    - name: set install to noninteractive to avoid mysql query for pass
+      shell: export DEBIAN_FRONTEND=noninteractive
     - name: install packages
       apt: name={{ item }} state=present
       with_items:
