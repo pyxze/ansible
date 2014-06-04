@@ -2,10 +2,26 @@
 - hosts: all
   gather_facts: false
   tasks:
-    - name: update & upgrade
-      shell: apt-get update && apt-get -y upgrade
     - name: set timezone
       shell: echo "Etc/UTC" > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
+    - name: create swap file
+      command: dd if=/dev/zero of=/swapfile bs=1M count=512
+      when: ansible_swaptotal_mb < 1
+    - name: make swap
+      command: mkswap /swapfile
+      when: ansible_swaptotal_mb < 1
+    - name: add to fstab
+      action: lineinfile dest=/etc/fstab regexp="swapfile" line="/swapfile none swap sw 0 0" state=present
+    - name: turn swap on
+      command: swapon -a
+    - name: set swapiness
+      shell: echo 0 | sudo tee /proc/sys/vm/swappiness
+    - name: set swapfile owner
+      shell: chown root:root /swapfile
+    - name: set swapfile permissions
+      shell: chmod 0600 /swapfile
+    - name: update & upgrade
+      shell: apt-get update && apt-get -y upgrade
     - name: set install to noninteractive to avoid mysql query for pass
       shell: export DEBIAN_FRONTEND=noninteractive
     - name: install packages
