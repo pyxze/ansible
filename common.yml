@@ -1,6 +1,5 @@
 ---
 - hosts: all
-  gather_facts: false
   tasks:
     - name: set timezone
       shell: echo "Etc/UTC" > /etc/timezone && dpkg-reconfigure --frontend noninteractive tzdata
